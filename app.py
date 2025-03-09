@@ -35,43 +35,89 @@ current_gender = "Detecting..."
 current_age = "Detecting..."
 current_confidence = "Detecting..."
 
+# Fallback image (provide a default image if camera fails)
+FALLBACK_IMAGE_PATH = "fallback.jpg"  # Add a sample image to the project root
+if not os.path.exists(FALLBACK_IMAGE_PATH):
+    # Create a blank fallback image if not provided
+    fallback_img = np.zeros((480, 640, 3), dtype=np.uint8)
+    cv2.imwrite(FALLBACK_IMAGE_PATH, fallback_img)
+
 def gen_frames():
     global current_emotion, current_gender, current_age, current_confidence
+    # Try to initialize camera
     camera = cv2.VideoCapture(0)
-    while True:
-        success, frame = camera.read()
-        if not success:
-            break
-        
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+    if not camera.isOpened():
+        print("Camera not available. Using fallback image.")
+        while True:
+            # Load fallback image
+            frame = cv2.imread(FALLBACK_IMAGE_PATH)
+            if frame is None:
+                frame = np.zeros((480, 640, 3), dtype=np.uint8)  # Black frame as last resort
+            # Process fallback image (optional: add static face detection)
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+            for (x, y, w, h) in faces:
+                roi_gray = gray[y:y+h, x:x+w]
+                roi_gray = cv2.resize(roi_gray, (48, 48))
+                roi_gray = roi_gray.astype('float32') / 255.0
+                roi_gray = np.expand_dims(roi_gray, axis=(0, -1))
+                emotion_pred = emotion_model.predict(roi_gray, verbose=0)
+                current_emotion = emotion_labels[np.argmax(emotion_pred)]
+                current_confidence = (np.max(emotion_pred) * 100).round(2)
 
-        for (x, y, w, h) in faces:
-            roi_gray = gray[y:y+h, x:x+w]
-            roi_gray = cv2.resize(roi_gray, (48, 48))
-            roi_gray = roi_gray.astype('float32') / 255.0
-            roi_gray = np.expand_dims(roi_gray, axis=(0, -1))
-            emotion_pred = emotion_model.predict(roi_gray, verbose=0)
-            current_emotion = emotion_labels[np.argmax(emotion_pred)]
-            current_confidence = (np.max(emotion_pred) * 100).round(2)
+                roi_color = frame[y:y+h, x:x+w]
+                roi_color = cv2.resize(roi_color, (48, 48))
+                roi_color = roi_color.astype('float32') / 255.0
+                roi_color_expanded = np.expand_dims(roi_color, axis=0)
+                
+                gender_pred = gender_model.predict(roi_color_expanded, verbose=0)
+                current_gender = gender_labels[np.argmax(gender_pred)]
 
-            roi_color = frame[y:y+h, x:x+w]
-            roi_color = cv2.resize(roi_color, (48, 48))
-            roi_color = roi_color.astype('float32') / 255.0
-            roi_color_expanded = np.expand_dims(roi_color, axis=0)
+                age_pred = age_model.predict(roi_color_expanded, verbose=0)
+                current_age = f"{int(age_pred[0][0])} years"
+
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\n')
+    else:
+        # Camera is available, proceed with normal operation
+        while True:
+            success, frame = camera.read()
+            if not success:
+                break
             
-            gender_pred = gender_model.predict(roi_color_expanded, verbose=0)
-            current_gender = gender_labels[np.argmax(gender_pred)]
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
-            age_pred = age_model.predict(roi_color_expanded, verbose=0)
-            current_age = f"{int(age_pred[0][0])} years"
+            for (x, y, w, h) in faces:
+                roi_gray = gray[y:y+h, x:x+w]
+                roi_gray = cv2.resize(roi_gray, (48, 48))
+                roi_gray = roi_gray.astype('float32') / 255.0
+                roi_gray = np.expand_dims(roi_gray, axis=(0, -1))
+                emotion_pred = emotion_model.predict(roi_gray, verbose=0)
+                current_emotion = emotion_labels[np.argmax(emotion_pred)]
+                current_confidence = (np.max(emotion_pred) * 100).round(2)
 
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                roi_color = frame[y:y+h, x:x+w]
+                roi_color = cv2.resize(roi_color, (48, 48))
+                roi_color = roi_color.astype('float32') / 255.0
+                roi_color_expanded = np.expand_dims(roi_color, axis=0)
+                
+                gender_pred = gender_model.predict(roi_color_expanded, verbose=0)
+                current_gender = gender_labels[np.argmax(gender_pred)]
 
-        ret, buffer = cv2.imencode('.jpg', frame)
-        frame = buffer.tobytes()
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\n')
+                age_pred = age_model.predict(roi_color_expanded, verbose=0)
+                current_age = f"{int(age_pred[0][0])} years"
+
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\n')
+        camera.release()
 
 @app.route('/')
 def index():
@@ -88,9 +134,16 @@ def video_feed():
 @app.route('/save_snapshot', methods=['POST'])
 def save_snapshot():
     global current_emotion, current_gender, current_age, current_confidence
+    # Since camera might not work, use the last processed frame or fallback
     camera = cv2.VideoCapture(0)
     success, frame = camera.read()
-    if success:
+    if not success:
+        frame = cv2.imread(FALLBACK_IMAGE_PATH)
+        if frame is None:
+            frame = np.zeros((480, 640, 3), dtype=np.uint8)
+    camera.release()
+
+    if frame is not None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"snapshot_{timestamp}.jpg"
         filepath = os.path.join(SNAPSHOT_DIR, filename)
