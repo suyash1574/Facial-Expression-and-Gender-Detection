@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Gender, Age & Expression Detection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            background: #1a1a1a;
+            color: #fff;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            height: 80vh;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            margin-bottom: 20px; /* Space for control panel and footer */
+        }
+
+        .camera-panel {
+            flex: 1;
+            position: relative;
+            background: #0a0a0a;
+            border-right: 2px solid #00D4FF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .video-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #00D4FF;
+            font-size: 18px;
+            font-weight: 700;
+            text-shadow: 0 0 10px #00D4FF;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        .analysis-panel {
+            flex: 1;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            overflow-y: auto;
+        }
+
+        .analysis-panel h2 {
+            color: #A100FF;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .analysis-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #A100FF;
+            border-radius: 5px;
+            transition: transform 0.3s ease;
+        }
+
+        .analysis-item:hover {
+            transform: translateX(5px);
+        }
+
+        .analysis-item strong {
+            color: #00D4FF;
+            margin-right: 10px;
+        }
+
+        .control-panel {
+            position: absolute;
+            bottom: 60px; /* Adjusted to leave space for footer */
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+
+        .control-panel button {
+            background: #A100FF;
+            border: none;
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-size: 14px;
+        }
+
+        .control-panel button:hover {
+            background: #00D4FF;
+        }
+
+        .footer {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            font-size: 14px;
+            color: #A100FF;
+            margin-top: auto; /* Pushes footer to bottom */
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                height: 85vh;
+            }
+
+            .camera-panel, .analysis-panel {
+                flex: none;
+                width: 100%;
+                height: 50%;
+            }
+
+            .control-panel {
+                position: static;
+                width: 100%;
+                justify-content: space-around;
+                bottom: 60px; /* Adjusted for footer on mobile */
+            }
+
+            .footer {
+                position: static;
+                margin-top: 10px;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .container, .analysis-item, .control-panel, .footer {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .light-mode .container {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .light-mode .camera-panel {
+            border-right-color: #A100FF;
+        }
+
+        .light-mode .analysis-panel h2 {
+            color: #00D4FF;
+        }
+
+        .light-mode .analysis-item {
+            background: rgba(0, 0, 0, 0.1);
+            border-left-color: #00D4FF;
+        }
+
+        .light-mode .control-panel {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .light-mode .control-panel button {
+            background: #00D4FF;
+        }
+
+        .light-mode .control-panel button:hover {
+            background: #A100FF;
+        }
+
+        .light-mode .footer {
+            background: rgba(0, 0, 0, 0.1);
+            color: #00D4FF;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="camera-panel">
+            <img src="{{ url_for('video_feed') }}" class="video-feed" id="videoFeed">
+            <div class="overlay" id="overlay">Detecting...</div>
+        </div>
+
+        <div class="analysis-panel">
+            <h2>Analysis</h2>
+            <div class="analysis-item" id="gender">Detected Gender: <strong>{{ gender }}</strong></div>
+            <div class="analysis-item" id="age">Estimated Age: <strong>{{ age }}</strong></div>
+            <div class="analysis-item" id="expression">Expression Status: <strong>{{ emotion }}</strong></div>
+            <div class="analysis-item" id="confidence">Confidence Score: <strong>{{ confidence }}</strong></div>
+            <a href="/history" style="color: #00D4FF; text-decoration: none;">View History</a>
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <button onclick="toggleTheme()">Toggle Theme</button>
+        <button onclick="toggleFeed()">Start/Stop Feed</button>
+        <button onclick="saveSnapshot()">Save Snapshot</button>
+        <button onclick="viewHistory()">View History</button>
+    </div>
+
+    <footer class="footer">
+        <p>Developed by Suyash | © 2025 All Rights Reserved</p>
+    </footer>
+
+    <script>
+        let isFeedRunning = true;
+        const videoFeed = document.getElementById('videoFeed');
+        const overlay = document.getElementById('overlay');
+        const gender = document.getElementById('gender');
+        const age = document.getElementById('age');
+        const expression = document.getElementById('expression');
+        const confidence = document.getElementById('confidence');
+
+        function updateDisplay(emotion, genderVal, ageVal, confidenceVal) {
+            overlay.textContent = `${emotion} | ${genderVal} | ${ageVal}`;
+            gender.textContent = `Detected Gender: ${genderVal}`;
+            age.textContent = `Estimated Age: ${ageVal}`;
+            expression.textContent = `Expression Status: ${emotion}`;
+            confidence.textContent = `Confidence Score: ${confidenceVal}`;
+        }
+
+        setInterval(() => {
+            if (isFeedRunning) {
+                fetch('/').then(response => response.text()).then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newGender = doc.querySelector('#gender strong').textContent;
+                    const newAge = doc.querySelector('#age strong').textContent;
+                    const newEmotion = doc.querySelector('#expression strong').textContent;
+                    const newConfidence = doc.querySelector('#confidence strong').textContent;
+                    updateDisplay(newEmotion, newGender, newAge, newConfidence);
+                });
+            }
+        }, 1000);
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            if (document.body.classList.contains('light-mode')) {
+                document.body.style.background = '#f0f0f0';
+                document.body.style.color = '#1a1a1a';
+            } else {
+                document.body.style.background = '#1a1a1a';
+                document.body.style.color = '#fff';
+            }
+        }
+
+        function toggleFeed() {
+            isFeedRunning = !isFeedRunning;
+            if (isFeedRunning) {
+                videoFeed.src = "{{ url_for('video_feed') }}";
+            } else {
+                videoFeed.src = "";
+                updateDisplay('Detecting...', 'Detecting...', 'Detecting...', 'Detecting...');
+            }
+        }
+
+        function saveSnapshot() {
+            fetch('/save_snapshot', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => alert(data.message))
+                .catch(error => alert('Error saving snapshot'));
+        }
+
+        function viewHistory() {
+            window.location.href = '/history';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+# Data paths
+data:
+  raw:
+    expression: "data/raw/expression/"      # FER-2013
+    gender: "data/raw/gender/UTKFace/"      # UTKFace (updated to specific subfolder)
+  processed:
+    emotion:
+      X_train: "data/processed/X_train_emotion.npy"
+      y_train: "data/processed/y_train_emotion.npy"
+      X_test: "data/processed/X_test_emotion.npy"
+      y_test: "data/processed/y_test_emotion.npy"
+    gender:
+      X_train: "data/processed/X_train_gender.npy"
+      y_train: "data/processed/y_train_gender.npy"
+      X_test: "data/processed/X_test_gender.npy"
+      y_test: "data/processed/y_test_gender.npy"
+    age:
+      X_train: "data/processed/X_train_age.npy"
+      y_train: "data/processed/y_train_age.npy"
+      X_test: "data/processed/X_test_age.npy"
+      y_test: "data/processed/y_test_age.npy"
+
+# Model settings
+models:
+  emotion:
+    input_shape: [48, 48, 1]
+    num_classes: 7
+    epochs: 10
+    batch_size: 64
+    save_path: "models/emotion_model.h5"
+  gender:
+    input_shape: [48, 48, 3]
+    num_classes: 2
+    epochs: 10
+    batch_size: 64
+    save_path: "models/gender_model.h5"
+  age:
+    input_shape: [48, 48, 3]
+    epochs: 10
+    batch_size: 64
+    save_path: "models/age_model.h5"
+
+# Flask app settings
+app:
+  host: "0.0.0.0"
+  port: 5000
+  debug: true
