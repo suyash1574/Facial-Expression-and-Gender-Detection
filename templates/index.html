@@ -51,10 +51,11 @@
             list-style: none;
             display: flex;
             gap: 20px;
+            align-items: center;
         }
 
         .navbar .nav-links a {
-            color: #00D4FF;
+            color: #fff;
             text-decoration: none;
             font-size: 16px;
             transition: color 0.3s ease, text-shadow 0.3s ease;
@@ -63,6 +64,23 @@
         .navbar .nav-links a:hover {
             color: #A100FF;
             text-shadow: 0 0 10px #A100FF;
+        }
+
+        .navbar .nav-links .control-button {
+            background: #A100FF;
+            border: none;
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+        }
+
+        .navbar .nav-links .control-button:hover {
+            background: #00D4FF;
         }
 
         /* Main Content */
@@ -162,6 +180,8 @@
             padding: 10px;
             border-radius: 10px;
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 10;
         }
 
         .control-panel button {
@@ -283,6 +303,23 @@
             color: #00D4FF;
             text-shadow: 0 0 10px #00D4FF;
         }
+
+        .light-mode .navbar .nav-links .control-button {
+            background: #00D4FF;
+        }
+
+        .light-mode .navbar .nav-links .control-button:hover {
+            background: #A100FF;
+        }
+        .camera-message {
+            color: #FF5555;
+            text-align: center;
+            padding: 10px;
+            background: rgba(255, 0, 0, 0.1);
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: {{ 'block' if camera_message else 'none' }};
+        }
     </style>
 </head>
 <body>
@@ -293,12 +330,14 @@
             <li><a href="/">Home</a></li>
             <li><a href="/history">History</a></li>
             <li><a href="#">About</a></li>
+            <li><a href="{{ url_for('upload_page') }}" class="control-button">Detect by Uploading Image</a></li>
         </ul>
     </nav>
 
     <!-- Main Content -->
     <div class="main-content">
         <div class="container">
+            <div class="camera-message">{{ camera_message }}</div>
             <div class="camera-panel">
                 <img src="{{ url_for('video_feed') }}" class="video-feed" id="videoFeed">
                 <div class="overlay" id="overlay">Detecting...</div>

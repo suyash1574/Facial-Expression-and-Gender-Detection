@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Gender, Age & Expression Detection</title>
+    <title>History - Face Detection</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -16,107 +16,103 @@
         body {
             background: #1a1a1a;
             color: #fff;
-            overflow-x: hidden;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding: 20px;
+            padding: 0;
         }
 
-        .container {
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar .brand {
+            color: #A100FF;
+            font-size: 24px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .navbar .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .navbar .nav-links a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 16px;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+
+        .navbar .nav-links a:hover {
+            color: #A100FF;
+            text-shadow: 0 0 10px #A100FF;
+        }
+
+        .navbar .nav-links .control-button {
+            background: #A100FF;
+            border: none;
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+        }
+
+        .navbar .nav-links .control-button:hover {
+            background: #00D4FF;
+        }
+
+        .main-content {
             flex: 1;
             display: flex;
-            width: 100%;
-            max-width: 1200px;
-            height: 80vh;
-            background: rgba(255, 255, 255, 0.1);
+            justify-content: center;
+            align-items: center;
+            padding: 80px 20px 20px 20px;
+        }
+
+        .history-container {
+            background: rgb(46, 46, 45);
+            padding: 30px;
             border-radius: 20px;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            overflow: hidden;
-            margin-bottom: 20px; /* Space for control panel and footer */
-        }
-
-        .camera-panel {
-            flex: 1;
-            position: relative;
-            background: #0a0a0a;
-            border-right: 2px solid #00D4FF;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .video-feed {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
-            position: absolute;
-            top: 0;
-            left: 0;
+            max-width: 800px;
         }
 
-        .overlay {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: #00D4FF;
-            font-size: 18px;
-            font-weight: 700;
-            text-shadow: 0 0 10px #00D4FF;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 5px 10px;
-            border-radius: 5px;
-        }
-
-        .analysis-panel {
-            flex: 1;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            overflow-y: auto;
-        }
-
-        .analysis-panel h2 {
-            color: #A100FF;
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
+        }
+
+        .history-container h2 {
+            color: #A100FF;
             font-size: 24px;
         }
 
-        .analysis-item {
-            margin-bottom: 15px;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border-left: 4px solid #A100FF;
-            border-radius: 5px;
-            transition: transform 0.3s ease;
-        }
-
-        .analysis-item:hover {
-            transform: translateX(5px);
-        }
-
-        .analysis-item strong {
-            color: #00D4FF;
-            margin-right: 10px;
-        }
-
-        .control-panel {
-            position: absolute;
-            bottom: 60px; /* Adjusted to leave space for footer */
-            left: 20px;
-            display: flex;
-            gap: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            z-index: 10;
-        }
-
-        .control-panel button {
+        .clear-history-btn {
             background: #A100FF;
             border: none;
             color: #fff;
@@ -127,44 +123,88 @@
             font-size: 14px;
         }
 
-        .control-panel button:hover {
+        .clear-history-btn:hover {
             background: #00D4FF;
+        }
+
+        .history-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #A100FF;
+            border-radius: 5px;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .history-item:hover {
+            transform: translateX(5px);
+        }
+
+        .history-item strong {
+            color: #00D4FF;
+            margin-right: 10px;
+        }
+
+        .history-item img {
+            max-width: 100px;
+            max-height: 100px;
+            margin-right: 20px;
+            border-radius: 5px;
+            object-fit: cover;
+        }
+
+        .history-details {
+            flex: 1;
         }
 
         .footer {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            padding: 10px 20px;
+            padding: 15px 30px;
             box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.3);
+            position: fixed;
+            width: 100%;
+            bottom: 0;
             text-align: center;
             font-size: 14px;
+        }
+
+        .footer span {
             color: #A100FF;
-            margin-top: auto; /* Pushes footer to bottom */
         }
 
         @media (max-width: 768px) {
-            .container {
+            .navbar {
                 flex-direction: column;
-                height: 85vh;
+                padding: 10px;
             }
 
-            .camera-panel, .analysis-panel {
-                flex: none;
-                width: 100%;
-                height: 50%;
-            }
-
-            .control-panel {
-                position: static;
-                width: 100%;
-                justify-content: space-around;
-                bottom: 60px; /* Adjusted for footer on mobile */
-            }
-
-            .footer {
-                position: static;
+            .navbar .nav-links {
                 margin-top: 10px;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .history-container {
+                padding: 20px;
+            }
+
+            .history-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .history-item img {
+                margin-bottom: 10px;
+                margin-right: 0;
+            }
+
+            .history-header {
+                flex-direction: column;
+                gap: 10px;
             }
         }
 
@@ -173,134 +213,112 @@
             to { opacity: 1; }
         }
 
-        .container, .analysis-item, .control-panel, .footer {
+        .history-container, .navbar, .footer {
             animation: fadeIn 0.5s ease-in-out;
         }
 
-        .light-mode .container {
+        .light-mode .history-container {
             background: rgba(0, 0, 0, 0.1);
         }
 
-        .light-mode .camera-panel {
-            border-right-color: #A100FF;
-        }
-
-        .light-mode .analysis-panel h2 {
+        .light-mode .history-container h2 {
             color: #00D4FF;
         }
 
-        .light-mode .analysis-item {
+        .light-mode .history-item {
             background: rgba(0, 0, 0, 0.1);
             border-left-color: #00D4FF;
         }
 
-        .light-mode .control-panel {
+        .light-mode .history-item strong {
+            color: #A100FF;
+        }
+
+        .light-mode .navbar, .light-mode .footer {
             background: rgba(0, 0, 0, 0.1);
         }
 
-        .light-mode .control-panel button {
+        .light-mode .navbar .brand, .light-mode .footer span {
+            color: #00D4FF;
+        }
+
+        .light-mode .navbar .nav-links a {
+            color: #A100FF;
+        }
+
+        .light-mode .navbar .nav-links a:hover {
+            color: #00D4FF;
+            text-shadow: 0 0 10px #00D4FF;
+        }
+
+        .light-mode .navbar .nav-links .control-button {
             background: #00D4FF;
         }
 
-        .light-mode .control-panel button:hover {
+        .light-mode .navbar .nav-links .control-button:hover {
             background: #A100FF;
         }
 
-        .light-mode .footer {
-            background: rgba(0, 0, 0, 0.1);
-            color: #00D4FF;
+        .light-mode .clear-history-btn {
+            background: #00D4FF;
+        }
+
+        .light-mode .clear-history-btn:hover {
+            background: #A100FF;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="camera-panel">
-            <img src="{{ url_for('video_feed') }}" class="video-feed" id="videoFeed">
-            <div class="overlay" id="overlay">Detecting...</div>
-        </div>
+    <nav class="navbar">
+        <div class="brand">Face Detection AI</div>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('index') }}">Home</a></li>
+            <li><a href="/history">History</a></li>
+            <li><a href="#">About</a></li>
+            <li><a href="{{ url_for('upload_page') }}" class="control-button">Detect by Uploading Image</a></li>
+        </ul>
+    </nav>
 
-        <div class="analysis-panel">
-            <h2>Analysis</h2>
-            <div class="analysis-item" id="gender">Detected Gender: <strong>{{ gender }}</strong></div>
-            <div class="analysis-item" id="age">Estimated Age: <strong>{{ age }}</strong></div>
-            <div class="analysis-item" id="expression">Expression Status: <strong>{{ emotion }}</strong></div>
-            <div class="analysis-item" id="confidence">Confidence Score: <strong>{{ confidence }}</strong></div>
-            <a href="/history" style="color: #00D4FF; text-decoration: none;">View History</a>
+    <div class="main-content">
+        <div class="history-container">
+            <div class="history-header">
+                <h2>History</h2>
+                <button class="clear-history-btn" onclick="clearHistory()">Clear History</button>
+            </div>
+            {% if history %}
+                {% for entry in history %}
+                    <div class="history-item">
+                        <img src="{{ url_for('serve_snapshot', filename=entry.image_path) }}" alt="Snapshot">
+                        <div class="history-details">
+                            <strong>Timestamp:</strong> {{ entry.timestamp }}<br>
+                            <strong>Gender:</strong> {{ entry.gender }}<br>
+                            <strong>Age:</strong> {{ entry.age }}<br>
+                            <strong>Emotion:</strong> {{ entry.emotion }}<br>
+                            <strong>Confidence:</strong> {{ entry.confidence }}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No history available.</p>
+            {% endif %}
         </div>
-    </div>
-
-    <div class="control-panel">
-        <button onclick="toggleTheme()">Toggle Theme</button>
-        <button onclick="toggleFeed()">Start/Stop Feed</button>
-        <button onclick="saveSnapshot()">Save Snapshot</button>
-        <button onclick="viewHistory()">View History</button>
     </div>
 
     <footer class="footer">
-        <p>Developed by Suyash | © 2025 All Rights Reserved</p>
+        <p>Developed by <span>Suyash</span> | © 2025 All Rights Reserved</p>
     </footer>
 
     <script>
-        let isFeedRunning = true;
-        const videoFeed = document.getElementById('videoFeed');
-        const overlay = document.getElementById('overlay');
-        const gender = document.getElementById('gender');
-        const age = document.getElementById('age');
-        const expression = document.getElementById('expression');
-        const confidence = document.getElementById('confidence');
-
-        function updateDisplay(emotion, genderVal, ageVal, confidenceVal) {
-            overlay.textContent = `${emotion} | ${genderVal} | ${ageVal}`;
-            gender.textContent = `Detected Gender: ${genderVal}`;
-            age.textContent = `Estimated Age: ${ageVal}`;
-            expression.textContent = `Expression Status: ${emotion}`;
-            confidence.textContent = `Confidence Score: ${confidenceVal}`;
-        }
-
-        setInterval(() => {
-            if (isFeedRunning) {
-                fetch('/').then(response => response.text()).then(html => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    const newGender = doc.querySelector('#gender strong').textContent;
-                    const newAge = doc.querySelector('#age strong').textContent;
-                    const newEmotion = doc.querySelector('#expression strong').textContent;
-                    const newConfidence = doc.querySelector('#confidence strong').textContent;
-                    updateDisplay(newEmotion, newGender, newAge, newConfidence);
-                });
+        function clearHistory() {
+            if (confirm("Are you sure you want to clear the history?")) {
+                fetch('/clear_history', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message);
+                        window.location.reload(); // Refresh the page to reflect cleared history
+                    })
+                    .catch(error => alert('Error clearing history: ' + error));
             }
-        }, 1000);
-
-        function toggleTheme() {
-            document.body.classList.toggle('light-mode');
-            if (document.body.classList.contains('light-mode')) {
-                document.body.style.background = '#f0f0f0';
-                document.body.style.color = '#1a1a1a';
-            } else {
-                document.body.style.background = '#1a1a1a';
-                document.body.style.color = '#fff';
-            }
-        }
-
-        function toggleFeed() {
-            isFeedRunning = !isFeedRunning;
-            if (isFeedRunning) {
-                videoFeed.src = "{{ url_for('video_feed') }}";
-            } else {
-                videoFeed.src = "";
-                updateDisplay('Detecting...', 'Detecting...', 'Detecting...', 'Detecting...');
-            }
-        }
-
-        function saveSnapshot() {
-            fetch('/save_snapshot', { method: 'POST' })
-                .then(response => response.json())
-                .then(data => alert(data.message))
-                .catch(error => alert('Error saving snapshot'));
-        }
-
-        function viewHistory() {
-            window.location.href = '/history';
         }
     </script>
 </body>

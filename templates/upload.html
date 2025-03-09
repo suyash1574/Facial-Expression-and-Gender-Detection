@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Image - Face Detection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            background: #1a1a1a;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar .brand {
+            color: #A100FF;
+            font-size: 24px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .navbar .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .navbar .nav-links a {
+            color: #00D4FF;
+            text-decoration: none;
+            font-size: 16px;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+
+        .navbar .nav-links a:hover {
+            color: #A100FF;
+            text-shadow: 0 0 10px #A100FF;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 80px 20px 20px 20px;
+        }
+
+        .upload-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .upload-container h2 {
+            color: #A100FF;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .upload-container form {
+            margin-bottom: 20px;
+        }
+
+        .upload-container input[type="file"] {
+            margin-bottom: 10px;
+            color: #00D4FF;
+        }
+
+        .upload-container button {
+            background: #A100FF;
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-size: 16px;
+        }
+
+        .upload-container button:hover {
+            background: #00D4FF;
+        }
+
+        .result-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .result-panel h3 {
+            color: #A100FF;
+            margin-bottom: 10px;
+        }
+
+        .result-item {
+            margin-bottom: 10px;
+            color: #00D4FF;
+        }
+
+        .error-message {
+            color: #FF0000;
+            border: 2px solid #FF0000;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+            display: {{ 'block' if face_not_detected else 'none' }};
+        }
+
+        .footer {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.3);
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .footer span {
+            color: #A100FF;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                padding: 10px;
+            }
+
+            .navbar .nav-links {
+                margin-top: 10px;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .upload-container {
+                padding: 20px;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .upload-container, .result-panel, .navbar, .footer {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .light-mode .upload-container {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .light-mode .upload-container h2 {
+            color: #00D4FF;
+        }
+
+        .light-mode .upload-container button {
+            background: #00D4FF;
+        }
+
+        .light-mode .upload-container button:hover {
+            background: #A100FF;
+        }
+
+        .light-mode .result-panel {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .light-mode .result-item {
+            color: #A100FF;
+        }
+
+        .light-mode .error-message {
+            color: #FF5555;
+            border-color: #FF5555;
+        }
+
+        .light-mode .navbar, .light-mode .footer {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .light-mode .navbar .brand, .light-mode .footer span {
+            color: #00D4FF;
+        }
+
+        .light-mode .navbar .nav-links a {
+            color: #A100FF;
+        }
+
+        .light-mode .navbar .nav-links a:hover {
+            color: #00D4FF;
+            text-shadow: 0 0 10px #00D4FF;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="brand">Face Detection AI</div>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('index') }}">Home</a></li>
+            <li><a href="/history">History</a></li>
+            <li><a href="#">About</a></li>
+        </ul>
+    </nav>
+
+    <div class="main-content">
+        <div class="upload-container">
+            <h2>Upload an Image</h2>
+            <form method="POST" action="{{ url_for('upload_file') }}" enctype="multipart/form-data">
+                <input type="file" name="file" accept="image/*" required>
+                <button type="submit">Upload</button>
+            </form>
+            <div class="result-panel">
+                <h3>Results</h3>
+                <div class="result-item" id="upload-gender">Detected Gender: <strong>{{ gender }}</strong></div>
+                <div class="result-item" id="upload-age">Estimated Age: <strong>{{ age }}</strong></div>
+                <div class="result-item" id="upload-expression">Expression Status: <strong>{{ emotion }}</strong></div>
+                <div class="result-item" id="upload-confidence">Confidence Score: <strong>{{ confidence }}</strong></div>
+            </div>
+            <div class="error-message">Face not detected, use another image due to image quality</div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Developed by <span>Suyash</span> | © 2025 All Rights Reserved</p>
+    </footer>
+
+    <script>
+        function updateUploadDisplay(emotion, genderVal, ageVal, confidenceVal, faceNotDetected) {
+            document.getElementById('upload-gender').textContent = `Detected Gender: ${genderVal}`;
+            document.getElementById('upload-age').textContent = `Estimated Age: ${ageVal}`;
+            document.getElementById('upload-expression').textContent = `Expression Status: ${emotion}`;
+            document.getElementById('upload-confidence').textContent = `Confidence Score: ${confidenceVal}`;
+            document.querySelector('.error-message').style.display = faceNotDetected ? 'block' : 'none';
+        }
+
+        // Initial load and periodic refresh
+        window.onload = function() {
+            fetch('/upload_page').then(response => response.text()).then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newGender = doc.querySelector('#upload-gender strong').textContent;
+                const newAge = doc.querySelector('#upload-age strong').textContent;
+                const newEmotion = doc.querySelector('#upload-expression strong').textContent;
+                const newConfidence = doc.querySelector('#upload-confidence strong').textContent;
+                const faceNotDetected = doc.querySelector('.error-message').style.display === 'block';
+                updateUploadDisplay(newEmotion, newGender, newAge, newConfidence, faceNotDetected);
+            });
+        };
+
+        setInterval(() => {
+            fetch('/upload_page').then(response => response.text()).then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newGender = doc.querySelector('#upload-gender strong').textContent;
+                const newAge = doc.querySelector('#upload-age strong').textContent;
+                const newEmotion = doc.querySelector('#upload-expression strong').textContent;
+                const newConfidence = doc.querySelector('#upload-confidence strong').textContent;
+                const faceNotDetected = doc.querySelector('.error-message').style.display === 'block';
+                updateUploadDisplay(newEmotion, newGender, newAge, newConfidence, faceNotDetected);
+            });
+        }, 1000);
+    </script>
+</body>
+</html>
